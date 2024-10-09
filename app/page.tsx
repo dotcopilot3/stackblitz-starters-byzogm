@@ -6,7 +6,7 @@
  * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
  */
 import { Button } from "@/components/ui/button";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Product = {
   id: number;
@@ -35,24 +35,25 @@ export default function Page() {
   }>({});
 
   const removeFromCart = (product: Product) => {
-    setCart(cart.filter((p) => p.id !== product.id));
+    const filteredCart = cart.filter((p) => p.id !== product.id);
+    setCart(filteredCart);
+    setQuantities(
+      filteredCart.reduce(
+        (acc, product) => ({ ...acc, [product.id]: product.quantity }),
+        {}
+      )
+    );
   };
 
-  useEffect(() => {
-    setQuantities(
-      cart.reduce(
-        (acc, product) => ({ ...acc, [product.id]: product.quantity }),
-        {},
-      ),
-    );
-  }, [cart]);
-
-  const totalPrice = cart
-    .reduce(
-      (total, product) => total + product.price * (quantities[product.id] || 1),
-      0,
-    )
-    .toFixed(2);
+  const totalPrice = useMemo(() => {
+    return cart
+      .reduce(
+        (total, product) =>
+          total + product.price * (quantities[product.id] || 1),
+        0
+      )
+      .toFixed(2);
+  }, [cart, quantities]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
